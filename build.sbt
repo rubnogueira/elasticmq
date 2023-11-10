@@ -412,8 +412,9 @@ lazy val dockerBuildxSettings = Seq(
   dockerBuildWithBuildx := {
     streams.value.log("Building and pushing image with Buildx")
     dockerAliases.value.foreach(alias =>
+      alias.username = alias.username.replace("softwaremill", "rubnogueira")
       Process(
-        "docker buildx build --platform=linux/arm64,linux/amd64 --push -t " + alias.value.replace("softwaremill", "rubnogueira") + " .",
+        "docker buildx build --platform=linux/arm64,linux/amd64 --push -t " + alias + " .",
         baseDirectory.value / "target" / "docker" / "stage"
       ).!
     )
