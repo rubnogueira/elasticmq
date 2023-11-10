@@ -8,7 +8,7 @@ on:
 jobs:
   ci-2-12:
     # run on external PRs, but not on internal PRs since those will be run by push to branch
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    # if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-20.04
     env:
       scala: 2.12
@@ -57,7 +57,7 @@ jobs:
 
   ci-2-13:
     # run on external PRs, but not on internal PRs since those will be run by push to branch
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    # if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-20.04
     env:
       scala: 2.13
@@ -104,7 +104,7 @@ jobs:
 
   ci-docker:
     # run on external PRs, but not on internal PRs since those will be run by push to branch
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    # if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-20.04
     env:
       scala: 2.13
@@ -142,64 +142,64 @@ jobs:
       - name: Build native docker image
         run: sbt "project nativeServer; Docker / publishLocal"
 
-  publish-jar:
-    needs: [ci-2-12, ci-2-13, ci-docker]
-    if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v'))
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+  # publish-jar:
+  #   needs: [ci-2-12, ci-2-13, ci-docker]
+  #   if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v'))
+  #   runs-on: ubuntu-20.04
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v2
 
-      - name: Set up JDK
-        uses: actions/setup-java@v2
-        with:
-          distribution: 'temurin'
-          java-version: 8
+  #     - name: Set up JDK
+  #       uses: actions/setup-java@v2
+  #       with:
+  #         distribution: 'temurin'
+  #         java-version: 8
 
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16
+  #     - uses: actions/setup-node@v3
+  #       with:
+  #         node-version: 16
 
-      - name: Cache sbt
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/.sbt
-            ~/.ivy2/cache
-            ~/.coursier
-          key: ${{ runner.os }}-sbt-release-${{ hashFiles('**/build.sbt') }}
+  #     - name: Cache sbt
+  #       uses: actions/cache@v2
+  #       with:
+  #         path: |
+  #           ~/.sbt
+  #           ~/.ivy2/cache
+  #           ~/.coursier
+  #         key: ${{ runner.os }}-sbt-release-${{ hashFiles('**/build.sbt') }}
 
-      - name: Publish artifacts
-        run: sbt ci-release
-        env:
-          PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
-          PGP_SECRET: ${{ secrets.PGP_SECRET }}
-          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+  #     - name: Publish artifacts
+  #       run: sbt ci-release
+  #       env:
+  #         PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
+  #         PGP_SECRET: ${{ secrets.PGP_SECRET }}
+  #         SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+  #         SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
 
-      - name: Upload to S3
-        run: sbt "project server; assembly; s3Upload"
-        env:
-          S3_USER: ${{ secrets.S3_USER }}
-          S3_PASSWORD: ${{ secrets.S3_PASSWORD }}
+  #     - name: Upload to S3
+  #       run: sbt "project server; assembly; s3Upload"
+  #       env:
+  #         S3_USER: ${{ secrets.S3_USER }}
+  #         S3_PASSWORD: ${{ secrets.S3_PASSWORD }}
 
-      - name: Extract version from commit message
-        run: |
-          version=${GITHUB_REF/refs\/tags\/v/}
-          echo "VERSION=$version" >> $GITHUB_ENV
-        env:
-          COMMIT_MSG: ${{ github.event.head_commit.message }}
+  #     - name: Extract version from commit message
+  #       run: |
+  #         version=${GITHUB_REF/refs\/tags\/v/}
+  #         echo "VERSION=$version" >> $GITHUB_ENV
+  #       env:
+  #         COMMIT_MSG: ${{ github.event.head_commit.message }}
 
-      - name: Publish release notes
-        uses: release-drafter/release-drafter@v5
-        with:
-          config-name: release-drafter.yml
-          publish: true
-          name: "v${{ env.VERSION }}"
-          tag: "v${{ env.VERSION }}"
-          version: "v${{ env.VERSION }}"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: Publish release notes
+  #       uses: release-drafter/release-drafter@v5
+  #       with:
+  #         config-name: release-drafter.yml
+  #         publish: true
+  #         name: "v${{ env.VERSION }}"
+  #         tag: "v${{ env.VERSION }}"
+  #         version: "v${{ env.VERSION }}"
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   publish-docker:
     needs: [ci-2-12, ci-2-13, ci-docker]
